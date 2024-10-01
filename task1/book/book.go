@@ -1,6 +1,6 @@
-package book
+package models
 
-type BookType struct {
+type Book struct {
 	ID     int
 	Title  string
 	Author string

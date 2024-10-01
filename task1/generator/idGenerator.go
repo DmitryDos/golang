@@ -2,7 +2,7 @@ package generator
 
 type IdGenerator func() int
 
-func GeneratorA() func() int {
+func IncGeneratorID() func() int {
 	count := 1
 
 	return func() int {
@@ -11,7 +11,7 @@ func GeneratorA() func() int {
 	}
 }
 
-func GeneratorB() func() int {
+func DecGeneratorID() func() int {
 	count := -1
 
 	return func() int {
