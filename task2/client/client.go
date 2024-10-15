@@ -59,7 +59,7 @@ func (c *Client) GetHardOp() (bool, int, error) {
 }
 
 func (c *Client) PostDecode(inputString string) (string, error) {
-	reqBody, err := json.Marshal(dto.Request{InputString: inputString})
+	reqBody, err := json.Marshal(dto.Request{Body: inputString})
 	if err != nil {
 		return "", err
 	}
@@ -87,5 +87,5 @@ func (c *Client) PostDecode(inputString string) (string, error) {
 		return "", err
 	}
 
-	return decoded.OutputString, nil
+	return decoded.Body, nil
 }

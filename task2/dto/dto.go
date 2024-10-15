@@ -1,9 +1,9 @@
 package dto
 
 type Request struct {
-	InputString string `json:"InputString"`
+	Body string `json:"InputString"`
 }
 
 type Response struct {
-	OutputString string `json:"OutputString"`
+	Body string `json:"OutputString"`
 }

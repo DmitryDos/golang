@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"task2/dto"
@@ -19,7 +19,7 @@ type Server struct {
 func (s *Server) Start() error {
 	go func() {
 		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			fmt.Printf("listen: %s\n", err)
+			slog.Info("listen: %s\n", err)
 		}
 	}()
 	return nil
@@ -30,20 +30,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
 }
 
 func NewServer(addr string) *Server {
-	srv := &http.Server{
-		Addr: addr,
-	}
-
-	http.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		fmt.Fprint(w, "v1.0.0")
+		slog.Info("Create server", "version", "v1.0.0")
 	})
 
-	http.HandleFunc("/decode", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/decode", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -56,18 +53,22 @@ func NewServer(addr string) *Server {
 			return
 		}
 
-		b, err := base64.StdEncoding.DecodeString(req.InputString)
+		b, err := base64.StdEncoding.DecodeString(req.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		outputString := string(b)
-		resp := dto.Response{OutputString: outputString}
-		json.NewEncoder(w).Encode(resp)
+		resp := dto.Response{Body: outputString}
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	})
 
-	http.HandleFunc("/hard-op", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/hard-op", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -81,8 +82,11 @@ func NewServer(addr string) *Server {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Process success")
 	})
+	server := &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
 
-	return &Server{srv}
+	return &Server{server}
 }

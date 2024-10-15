@@ -3,12 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
 	"task2/client"
 	"task2/server"
 	"time"
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	srv := server.NewServer(":8080")
 	if err := srv.Start(); err != nil {
 		fmt.Println(err)
@@ -17,36 +22,32 @@ func main() {
 
 	newClient := client.NewClient("http://localhost:8080")
 
-	body, err := newClient.GetVersion()
+	_, err := newClient.GetVersion()
 	if err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		return
 	}
-	fmt.Println(string(body))
 
 	decodedString, err := newClient.PostDecode("aGVsbG8gd29ybGQ=") // hello world
 	if err != nil {
-		fmt.Println(err)
+		slog.Warn("PostDecode request failed: %s\n", "Error", err.Error())
 		return
 	}
-	fmt.Println(decodedString)
+	slog.Debug("PostDecode request", "text", decodedString)
 
 	status, code, err := newClient.GetHardOp()
 	if err != nil {
-		fmt.Println(err)
+		slog.Warn("GetHardOp request failed: %s\n", "Error", err.Error())
 		return
 	}
-	if status {
-		fmt.Printf("%t, %d\n", status, code)
-		return
-	}
-	fmt.Printf("%t\n", status)
+
+	slog.Debug("Hard-op request", "status", status, "code", code)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Server shutdown failed: %s\n", err)
+		slog.Warn("Server shutdown failed: %s\n", "Error", err.Error())
 	}
-	fmt.Println("Server shutdown successfully")
+	slog.Debug("Server shutdown successfully")
 }
