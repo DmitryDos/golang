@@ -44,15 +44,15 @@ func (c *Client) GetHardOp() (bool, int, error) {
 
 	req, err := http.NewRequestWithContext(ctx, "GET", c.url+"/hard-op", nil)
 	if err != nil {
-		return false, 500, err
+		return false, http.StatusInternalServerError, err
 	}
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return false, 500, nil
+			return false, http.StatusInternalServerError, nil
 		}
-		return false, 500, err
+		return false, http.StatusInternalServerError, err
 	}
 
 	return true, response.StatusCode, nil
@@ -75,6 +75,8 @@ func (c *Client) PostDecode(inputString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
