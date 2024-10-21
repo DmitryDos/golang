@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"net/http"
@@ -37,7 +38,7 @@ func NewServer(addr string) *Server {
 			return
 		}
 
-		slog.Info("Create server", "version", "v1.0.0")
+		fmt.Fprint(w, "v1.0.0")
 	})
 
 	mux.HandleFunc("/decode", func(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +84,10 @@ func NewServer(addr string) *Server {
 		}
 		w.WriteHeader(http.StatusOK)
 	})
+
 	server := &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
-
 	return &Server{server}
 }
