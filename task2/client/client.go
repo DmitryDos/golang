@@ -30,11 +30,11 @@ func (c *Client) GetVersion() ([]byte, error) {
 		return nil, err
 	}
 
+	response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	response.Body.Close()
 	return body, nil
 }
 
@@ -54,7 +54,7 @@ func (c *Client) GetHardOp() (bool, int, error) {
 		}
 		return false, http.StatusInternalServerError, err
 	}
-	response.Body.Close()
+	defer response.Body.Close()
 	return true, response.StatusCode, nil
 }
 
@@ -76,6 +76,7 @@ func (c *Client) PostDecode(inputString string) (string, error) {
 		return "", err
 	}
 
+	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
@@ -86,6 +87,5 @@ func (c *Client) PostDecode(inputString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer response.Body.Close()
 	return decoded.Body, nil
 }
